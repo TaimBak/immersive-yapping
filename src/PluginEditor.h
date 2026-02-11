@@ -31,5 +31,8 @@ private:
     juce::Label algorithmLabel;
     juce::Label statusLabel;
 
+    juce::ComboBox irSelector;
+    juce::Label irSelectorLabel;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralConvolverAudioProcessorEditor)
 };

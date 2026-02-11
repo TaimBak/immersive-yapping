@@ -23,13 +23,31 @@ SpectralConvolverAudioProcessorEditor::SpectralConvolverAudioProcessorEditor(Spe
     algorithmLabel.setJustificationType(juce::Justification::centredRight);
     addAndMakeVisible(algorithmLabel);
 
+    // IR selector ComboBox
+    irSelectorLabel.setText("Impulse Response:", juce::dontSendNotification);
+    irSelectorLabel.setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(irSelectorLabel);
+
+    const auto& irList = SpectralConvolverAudioProcessor::getIRList();
+    for (int i = 0; i < static_cast<int>(irList.size()); ++i)
+        irSelector.addItem(irList[static_cast<size_t>(i)].displayName, i + 1);
+
+    irSelector.setSelectedId(audioProcessor.getCurrentIRIndex() + 1, juce::dontSendNotification);
+    irSelector.onChange = [this]()
+    {
+        int selectedIndex = irSelector.getSelectedId() - 1;
+        audioProcessor.loadImpulseResponseByIndex(selectedIndex);
+        repaint();
+    };
+    addAndMakeVisible(irSelector);
+
     // Status label showing current algorithm
     updateStatusLabel();
     statusLabel.setJustificationType(juce::Justification::centred);
     statusLabel.setFont(juce::FontOptions(18.0f));
     addAndMakeVisible(statusLabel);
 
-    setSize(400, 300);
+    setSize(400, 350);
 }
 
 SpectralConvolverAudioProcessorEditor::~SpectralConvolverAudioProcessorEditor()
@@ -69,9 +87,18 @@ void SpectralConvolverAudioProcessorEditor::paint(juce::Graphics& g)
 
     // Draw IR info
     g.setFont(juce::FontOptions(14.0f));
-    juce::String irInfo = audioProcessor.isIRLoaded()
-        ? "IR Loaded: " + juce::String(audioProcessor.getIRLength()) + " samples"
-        : "No IR Loaded";
+    juce::String irInfo;
+    if (audioProcessor.isIRLoaded())
+    {
+        const auto& irList = SpectralConvolverAudioProcessor::getIRList();
+        int idx = audioProcessor.getCurrentIRIndex();
+        irInfo = juce::String(irList[static_cast<size_t>(idx)].displayName)
+            + " - " + juce::String(audioProcessor.getIRLength()) + " samples";
+    }
+    else
+    {
+        irInfo = "No IR Loaded";
+    }
     g.drawFittedText(irInfo, getLocalBounds().removeFromBottom(40),
         juce::Justification::centred, 1);
 }
@@ -94,4 +121,12 @@ void SpectralConvolverAudioProcessorEditor::resized()
     algorithmLabel.setBounds(toggleRow.removeFromLeft(150));
     toggleRow.removeFromLeft(10); // Spacing
     algorithmToggle.setBounds(toggleRow);
+
+    centerArea.removeFromTop(15); // Spacing
+
+    // IR selector row
+    auto irRow = centerArea.removeFromTop(30);
+    irSelectorLabel.setBounds(irRow.removeFromLeft(150));
+    irRow.removeFromLeft(10); // Spacing
+    irSelector.setBounds(irRow);
 }

@@ -5,6 +5,15 @@
 #include "TimeDomainConvolver.h"
 #include <memory>
 #include <vector>
+#include <array>
+
+struct IRInfo
+{
+    const char* displayName;
+    const char* binaryDataName;
+    const void* data;
+    int size;
+};
 
 enum class ConvolverType
 {
@@ -48,9 +57,10 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     // IR Management
-    
+    static const std::array<IRInfo, 3>& getIRList();
     void loadImpulseResponse (const std::vector<float>& ir);
-    bool loadImpulseResponseFromFile (const juce::File& file);
+    void loadImpulseResponseByIndex (int index);
+    int getCurrentIRIndex() const { return currentIRIndex.load(); }
     bool isIRLoaded() const { return irLoaded.load(); }
     int getIRLength() const { return irLength; }
 
@@ -71,6 +81,7 @@ private:
     std::vector<float> currentIR;
     int irLength = 0;
     std::atomic<bool> irLoaded { false };
+    std::atomic<int> currentIRIndex { 0 };
     
     double currentSampleRate = 44100.0;
     int currentBlockSize = 512;
