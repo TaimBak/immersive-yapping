@@ -2,8 +2,8 @@
 #include "BinaryData.h"
 #include "PluginEditor.h"
 
-const std::array<IRInfo, 3> &SpectralConvolverAudioProcessor::getIRList() {
-  static const std::array<IRInfo, 3> irList = {{
+const std::array<IRInfo, 2> &SpectralConvolverAudioProcessor::getIRList() {
+  static const std::array<IRInfo, 2> irList = {{
       {"Ampitheater", "Ampitheater_wav", BinaryData::Ampitheater_wav,
        BinaryData::Ampitheater_wavSize},
       {"Bedroom", "Bedroom_wav", BinaryData::Bedroom_wav,
