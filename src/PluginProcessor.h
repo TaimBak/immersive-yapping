@@ -51,7 +51,7 @@ public:
   void setStateInformation(const void *data, int sizeInBytes) override;
 
   // IR Management
-  static const std::array<IRInfo, 2> &getIRList();
+  static const std::array<IRInfo, 4> &getIRList();
   void loadImpulseResponse(const std::vector<float> &ir);
   void loadImpulseResponseByIndex(int index);
   int getCurrentIRIndex() const { return currentIRIndex.load(); }
