@@ -19,7 +19,7 @@ juce_add_plugin(SpectralConvolver
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     VST3_CATEGORIES Fx
     AU_MAIN_TYPE kAudioUnitType_Effect
-    COPY_PLUGIN_AFTER_BUILD FALSE
+    COPY_PLUGIN_AFTER_BUILD TRUE
 )
 
 juce_generate_juce_header(SpectralConvolver)

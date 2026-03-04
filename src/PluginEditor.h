@@ -8,31 +8,40 @@
 
 #pragma once
 
-#include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include <JuceHeader.h>
 
-class SpectralConvolverAudioProcessorEditor : public juce::AudioProcessorEditor,
-    public juce::Button::Listener
-{
+class SpectralConvolverAudioProcessorEditor
+    : public juce::AudioProcessorEditor {
 public:
-    SpectralConvolverAudioProcessorEditor(SpectralConvolverAudioProcessor&);
-    ~SpectralConvolverAudioProcessorEditor() override;
+  SpectralConvolverAudioProcessorEditor(SpectralConvolverAudioProcessor &);
+  ~SpectralConvolverAudioProcessorEditor() override;
 
-    void paint(juce::Graphics&) override;
-    void resized() override;
-
-    void buttonClicked(juce::Button* button) override;
+  void paint(juce::Graphics &) override;
+  void resized() override;
 
 private:
-    void updateStatusLabel();
-    SpectralConvolverAudioProcessor& audioProcessor;
+  void updateStatusLabel();
+  SpectralConvolverAudioProcessor &audioProcessor;
 
-    juce::ToggleButton algorithmToggle;
-    juce::Label algorithmLabel;
-    juce::Label statusLabel;
+  juce::ToggleButton algorithmToggle;
+  juce::Label algorithmLabel;
+  juce::Label statusLabel;
 
-    juce::ComboBox irSelector;
-    juce::Label irSelectorLabel;
+  juce::ComboBox irSelector;
+  juce::Label irSelectorLabel;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralConvolverAudioProcessorEditor)
+  juce::Slider dryWetSlider;
+  juce::Label dryWetLabel;
+
+  // APVTS attachments
+  std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>
+      dryWetAttachment;
+  std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment>
+      irAttachment;
+  std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>
+      algorithmAttachment;
+
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
+      SpectralConvolverAudioProcessorEditor)
 };

@@ -16,6 +16,26 @@ const std::array<IRInfo, 4> &SpectralConvolverAudioProcessor::getIRList() {
   return irList;
 }
 
+juce::AudioProcessorValueTreeState::ParameterLayout
+SpectralConvolverAudioProcessor::createParameterLayout() {
+  juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+  layout.add(std::make_unique<juce::AudioParameterFloat>(
+      juce::ParameterID{"dryWet", 1}, "Dry/Wet",
+      juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f));
+
+  layout.add(std::make_unique<juce::AudioParameterChoice>(
+      juce::ParameterID{"algorithm", 1}, "Algorithm",
+      juce::StringArray{"Frequency Domain", "Time Domain"}, 0));
+
+  layout.add(std::make_unique<juce::AudioParameterChoice>(
+      juce::ParameterID{"irIndex", 1}, "Impulse Response",
+      juce::StringArray{"Ampitheater", "Bedroom", "Synthetic", "Kronecker"},
+      0));
+
+  return layout;
+}
+
 SpectralConvolverAudioProcessor::SpectralConvolverAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
     : AudioProcessor(
@@ -29,6 +49,10 @@ SpectralConvolverAudioProcessor::SpectralConvolverAudioProcessor()
       )
 #endif
 {
+  dryWetParam = apvts.getRawParameterValue("dryWet");
+  algorithmParam = apvts.getRawParameterValue("algorithm");
+  irIndexParam = apvts.getRawParameterValue("irIndex");
+
   loadImpulseResponseByIndex(0);
 }
 
@@ -197,6 +221,17 @@ void SpectralConvolverAudioProcessor::processBlock(
   for (auto i = totalNumInputChannels; i < totalNumOutputChannels; i++)
     buffer.clear(i, 0, numSamples);
 
+  // Read APVTS parameters
+  const float dryWetMix = dryWetParam->load();
+  const auto convolverType = static_cast<int>(algorithmParam->load()) == 0
+                                 ? ConvolverType::FrequencyDomain
+                                 : ConvolverType::TimeDomain;
+  currentConvolverType.store(convolverType);
+
+  const int newIRIndex = static_cast<int>(irIndexParam->load());
+  if (newIRIndex != currentIRIndex.load())
+    loadImpulseResponseByIndex(newIRIndex);
+
   if (irPendingRebuild.load())
     rebuildConvolvers();
 
@@ -207,8 +242,6 @@ void SpectralConvolverAudioProcessor::processBlock(
 
   if (!lock.isLocked())
     return;
-
-  const auto convolverType = currentConvolverType.load();
 
   for (int channel = 0; channel < totalNumInputChannels; channel++) {
     // Check convolver availability based on type
@@ -326,25 +359,16 @@ juce::AudioProcessorEditor *SpectralConvolverAudioProcessor::createEditor() {
 
 void SpectralConvolverAudioProcessor::getStateInformation(
     juce::MemoryBlock &destData) {
-  juce::MemoryOutputStream stream(destData, true);
-  stream.writeFloat(dryWetMix);
-  stream.writeInt(static_cast<int>(currentConvolverType.load()));
-  stream.writeInt(currentIRIndex.load());
+  auto state = apvts.copyState();
+  std::unique_ptr<juce::XmlElement> xml(state.createXml());
+  copyXmlToBinary(*xml, destData);
 }
 
 void SpectralConvolverAudioProcessor::setStateInformation(const void *data,
                                                           int sizeInBytes) {
-  juce::MemoryInputStream stream(data, static_cast<size_t>(sizeInBytes), false);
-  if (sizeInBytes >= static_cast<int>(sizeof(float)))
-    dryWetMix = stream.readFloat();
-
-  if (sizeInBytes >= static_cast<int>(sizeof(float) + sizeof(int)))
-    currentConvolverType.store(static_cast<ConvolverType>(stream.readInt()));
-
-  if (sizeInBytes >= static_cast<int>(sizeof(float) + 2 * sizeof(int))) {
-    int irIndex = stream.readInt();
-    loadImpulseResponseByIndex(irIndex);
-  }
+  std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
+  if (xml != nullptr && xml->hasTagName(apvts.state.getType()))
+    apvts.replaceState(juce::ValueTree::fromXml(*xml));
 }
 
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() {

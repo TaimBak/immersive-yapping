@@ -21,6 +21,11 @@ public:
   SpectralConvolverAudioProcessor();
   ~SpectralConvolverAudioProcessor() override;
 
+  static juce::AudioProcessorValueTreeState::ParameterLayout
+  createParameterLayout();
+  juce::AudioProcessorValueTreeState apvts{*this, nullptr, "Parameters",
+                                           createParameterLayout()};
+
   void prepareToPlay(double sampleRate, int samplesPerBlock) override;
   void releaseResources() override;
 
@@ -84,7 +89,9 @@ private:
   juce::SpinLock irLock;
   std::atomic<bool> irPendingRebuild{false};
 
-  float dryWetMix = 1.0f; // 1.0 = 100% wet
+  std::atomic<float> *dryWetParam = nullptr;
+  std::atomic<float> *algorithmParam = nullptr;
+  std::atomic<float> *irIndexParam = nullptr;
 
   //==============================================================================
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralConvolverAudioProcessor)
