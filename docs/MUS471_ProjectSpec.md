@@ -3,7 +3,7 @@ MUS-471-SP26
 
 Project Timeline and Deliverables
 
-## Part 1: Implementation Changes, Additions, and Deletions
+## Implementation Changes, Additions, and Deletions
 
 ### Summary of Work Completed in MUS 470
 
@@ -39,7 +39,7 @@ The core algorithmic and audio engine work outlined in the original MUS 470 spec
 
 **Multichannel and ambisonics support — removed.** These were mentioned as future extensions in the original spec and are not being pursued. They would require substantial additional DSP work (multichannel IR handling, spatial encoding/decoding) that falls outside the core scope of the project. The plugin operates in stereo, which is appropriate for the VOIP/proximity chat use case described in the original motivation.
 
-## Part 2: Timeline of Milestones and Deliverables
+## Timeline of Milestones and Deliverables
 
 ### Week 1: Plugin Parameter System, Unreal Research, and Project Setup
 
