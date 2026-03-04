@@ -3,6 +3,8 @@ project(SpectralConvolver VERSION 1.0.0)
 
 add_subdirectory(JUCE)
 
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+
 juce_add_plugin(SpectralConvolver
     PRODUCT_NAME "SpectralConvolver"
     COMPANY_NAME "TaimBak"
@@ -17,10 +19,18 @@ juce_add_plugin(SpectralConvolver
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     VST3_CATEGORIES Fx
     AU_MAIN_TYPE kAudioUnitType_Effect
-    COPY_PLUGIN_AFTER_BUILD TRUE
+    COPY_PLUGIN_AFTER_BUILD FALSE
 )
 
 juce_generate_juce_header(SpectralConvolver)
+
+juce_add_binary_data(IRData
+    SOURCES
+        assets/Ampitheater.wav
+        assets/Bedroom.wav
+        assets/Synthetic.wav
+        assets/Kronecker.wav
+)
 
 target_sources(SpectralConvolver
     PRIVATE
@@ -42,6 +52,7 @@ target_compile_definitions(SpectralConvolver
 
 target_link_libraries(SpectralConvolver
     PRIVATE
+        IRData
         juce::juce_audio_basics
         juce::juce_audio_devices
         juce::juce_audio_formats
@@ -60,3 +71,6 @@ target_link_libraries(SpectralConvolver
         juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags
 )
+
+get_target_property(JUCE_INCLUDE_DIRS juce::juce_core INTERFACE_INCLUDE_DIRECTORIES)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${JUCE_INCLUDE_DIRS})

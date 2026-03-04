@@ -1,19 +1,19 @@
 #include "TimeDomainConvolver.h"
 
-#define MIX 0.7
-
 TimeDomainConvolver::TimeDomainConvolver(const std::vector<float>& inputIR)
-    : ir(inputIR), irSize(ir.size()), delayBuffer(std::max<std::size_t>(1, ir.size()), 0.0f), writeIndex(0)
+    : ir(inputIR)
+    , irSize(ir.size())
+    , delayBuffer(std::max<std::size_t>(1, ir.size()), 0.0f)
+    , writeIndex(0)
 {
     if (irSize == 0) throw std::invalid_argument("IR cannot be empty");
 }
 
 void TimeDomainConvolver::reset()
 {
-    // Sets all to 0.0f to remove any -t values
     std::fill(delayBuffer.begin(), delayBuffer.end(), 0.0f);
-    writeIndex= 0;
-};
+    writeIndex = 0;
+}
 
 float TimeDomainConvolver::processSample(float x)
 {
@@ -41,11 +41,17 @@ float TimeDomainConvolver::processSample(float x)
 
 void TimeDomainConvolver::processBlock(const float* in, float* out, std::size_t numSamples)
 {
+    // Output wet signal only (dry/wet mixing handled by processor)
     for (std::size_t n = 0; n < numSamples; n++)
-    {
-		// Dry + Wet mix
-        out[n] = (1-MIX)*in[n] + processSample(in[n] * MIX);
-    }
+        out[n] = processSample(in[n]);
+}
 
-    return;
+std::vector<float> TimeDomainConvolver::processBlock(const float* input, int numSamples)
+{
+    std::vector<float> output(numSamples);
+
+    for (int n = 0; n < numSamples; n++)
+        output[n] = processSample(input[n]);
+
+    return output;
 }
