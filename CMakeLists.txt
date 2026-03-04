@@ -3,6 +3,8 @@ project(SpectralConvolver VERSION 1.0.0)
 
 add_subdirectory(JUCE)
 
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+
 juce_add_plugin(SpectralConvolver
     PRODUCT_NAME "SpectralConvolver"
     COMPANY_NAME "TaimBak"
