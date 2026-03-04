@@ -1,4 +1,4 @@
-# Spectral Convolution Reverb Plugin
+# Immersive Yapping - A Spectral Convolution Plugin for Proximity Chat
 
 A real-time convolution reverb system built in C++ with JUCE, targeting both DAW and game engine environments. The plugin applies environment-specific impulse response (IR) reverb to audio — designed for use cases like VOIP proximity chat in 3D games where traditional baked-in reverb falls short.
 
