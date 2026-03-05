@@ -26,8 +26,7 @@ juce_generate_juce_header(SpectralConvolver)
 
 juce_add_binary_data(IRData
     SOURCES
-        assets/Synthetic.wav
-        assets/Kronecker.wav
+        assets/Hall.wav
         assets/Room.wav
 )
 

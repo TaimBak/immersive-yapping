@@ -2,13 +2,10 @@
 #include "BinaryData.h"
 #include "PluginEditor.h"
 
-const std::array<IRInfo, 3> &SpectralConvolverAudioProcessor::getIRList()
+const std::array<IRInfo, 2> &SpectralConvolverAudioProcessor::getIRList()
 {
-  static const std::array<IRInfo, 3> irList = {{
-      {"Synthetic", "Synthetic_wav", BinaryData::Synthetic_wav,
-       BinaryData::Synthetic_wavSize},
-      {"Kronecker", "Kronecker_wav", BinaryData::Kronecker_wav,
-       BinaryData::Kronecker_wavSize},
+  static const std::array<IRInfo, 2> irList = {{
+      {"Hall", "Hall_wav", BinaryData::Hall_wav, BinaryData::Hall_wavSize},
       {"Room", "Room_wav", BinaryData::Room_wav, BinaryData::Room_wavSize},
   }};
   return irList;
@@ -29,7 +26,7 @@ SpectralConvolverAudioProcessor::createParameterLayout()
 
   layout.add(std::make_unique<juce::AudioParameterChoice>(
       juce::ParameterID{"irIndex", 1}, "Impulse Response",
-      juce::StringArray{"Synthetic", "Kronecker", "Room"}, 0));
+      juce::StringArray{"Hall", "Room"}, 0));
 
   return layout;
 }
