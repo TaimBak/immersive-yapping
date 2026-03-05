@@ -7,16 +7,22 @@
 #include <memory>
 #include <vector>
 
-struct IRInfo {
+struct IRInfo
+{
   const char *displayName;
   const char *binaryDataName;
   const void *data;
   int size;
 };
 
-enum class ConvolverType { FrequencyDomain, TimeDomain };
+enum class ConvolverType
+{
+  FrequencyDomain,
+  TimeDomain
+};
 
-class SpectralConvolverAudioProcessor : public juce::AudioProcessor {
+class SpectralConvolverAudioProcessor : public juce::AudioProcessor
+{
 public:
   SpectralConvolverAudioProcessor();
   ~SpectralConvolverAudioProcessor() override;
@@ -56,7 +62,7 @@ public:
   void setStateInformation(const void *data, int sizeInBytes) override;
 
   // IR Management
-  static const std::array<IRInfo, 4> &getIRList();
+  static const std::array<IRInfo, 3> &getIRList();
   void loadImpulseResponse(const std::vector<float> &ir);
   void loadImpulseResponseByIndex(int index);
   int getCurrentIRIndex() const { return currentIRIndex.load(); }
@@ -85,6 +91,10 @@ private:
   double currentSampleRate = 44100.0;
   int currentBlockSize = 512;
   int fftOrder = 10;
+
+  // Pre-allocated audio thread buffers (sized in prepareToPlay)
+  std::vector<float> wetBuffer;
+  std::vector<float> dryBuffer;
 
   juce::SpinLock irLock;
   std::atomic<bool> irPendingRebuild{false};

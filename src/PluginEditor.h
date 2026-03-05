@@ -11,8 +11,8 @@
 #include "PluginProcessor.h"
 #include <JuceHeader.h>
 
-class SpectralConvolverAudioProcessorEditor
-    : public juce::AudioProcessorEditor {
+class SpectralConvolverAudioProcessorEditor : public juce::AudioProcessorEditor
+{
 public:
   SpectralConvolverAudioProcessorEditor(SpectralConvolverAudioProcessor &);
   ~SpectralConvolverAudioProcessorEditor() override;

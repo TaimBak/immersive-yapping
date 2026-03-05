@@ -11,7 +11,8 @@
 
 SpectralConvolverAudioProcessorEditor::SpectralConvolverAudioProcessorEditor(
     SpectralConvolverAudioProcessor &p)
-    : AudioProcessorEditor(&p), audioProcessor(p) {
+    : AudioProcessorEditor(&p), audioProcessor(p)
+{
   // Algorithm toggle button
   algorithmToggle.setButtonText("Use Time Domain");
   addAndMakeVisible(algorithmToggle);
@@ -62,10 +63,12 @@ SpectralConvolverAudioProcessorEditor::SpectralConvolverAudioProcessorEditor(
   setSize(400, 400);
 }
 
-SpectralConvolverAudioProcessorEditor::
-    ~SpectralConvolverAudioProcessorEditor() {}
+SpectralConvolverAudioProcessorEditor::~SpectralConvolverAudioProcessorEditor()
+{
+}
 
-void SpectralConvolverAudioProcessorEditor::updateStatusLabel() {
+void SpectralConvolverAudioProcessorEditor::updateStatusLabel()
+{
   if (!algorithmToggle.getToggleState())
     statusLabel.setText("Current: Frequency Domain (FFT)",
                         juce::dontSendNotification);
@@ -74,7 +77,8 @@ void SpectralConvolverAudioProcessorEditor::updateStatusLabel() {
                         juce::dontSendNotification);
 }
 
-void SpectralConvolverAudioProcessorEditor::paint(juce::Graphics &g) {
+void SpectralConvolverAudioProcessorEditor::paint(juce::Graphics &g)
+{
   g.fillAll(
       getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
@@ -86,19 +90,23 @@ void SpectralConvolverAudioProcessorEditor::paint(juce::Graphics &g) {
   // Draw IR info
   g.setFont(juce::FontOptions(14.0f));
   juce::String irInfo;
-  if (audioProcessor.isIRLoaded()) {
+  if (audioProcessor.isIRLoaded())
+  {
     const auto &irList = SpectralConvolverAudioProcessor::getIRList();
     int idx = audioProcessor.getCurrentIRIndex();
     irInfo = juce::String(irList[static_cast<size_t>(idx)].displayName) +
              " - " + juce::String(audioProcessor.getIRLength()) + " samples";
-  } else {
+  }
+  else
+  {
     irInfo = "No IR Loaded";
   }
   g.drawFittedText(irInfo, getLocalBounds().removeFromBottom(40),
                    juce::Justification::centred, 1);
 }
 
-void SpectralConvolverAudioProcessorEditor::resized() {
+void SpectralConvolverAudioProcessorEditor::resized()
+{
   auto bounds = getLocalBounds();
   bounds.removeFromTop(70);    // Space for title
   bounds.removeFromBottom(50); // Space for IR info

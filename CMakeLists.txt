@@ -26,10 +26,9 @@ juce_generate_juce_header(SpectralConvolver)
 
 juce_add_binary_data(IRData
     SOURCES
-        assets/Ampitheater.wav
-        assets/Bedroom.wav
         assets/Synthetic.wav
         assets/Kronecker.wav
+        assets/Room.wav
 )
 
 target_sources(SpectralConvolver
