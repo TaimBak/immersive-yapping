@@ -6,7 +6,7 @@ add_subdirectory(JUCE)
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
 
 juce_add_plugin(SpectralConvolver
-    PRODUCT_NAME "SpectralConvolver"
+    PRODUCT_NAME "ImmersiveYapping"
     COMPANY_NAME "TaimBak"
     BUNDLE_ID "com.TaimBak.SpectralConvolver"
     PLUGIN_MANUFACTURER_CODE Manu
