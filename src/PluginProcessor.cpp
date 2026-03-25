@@ -2,18 +2,33 @@
 #include "BinaryData.h"
 #include "PluginEditor.h"
 
-const std::array<IRInfo, 4> &SpectralConvolverAudioProcessor::getIRList() {
-  static const std::array<IRInfo, 4> irList = {{
-      {"Ampitheater", "Ampitheater_wav", BinaryData::Ampitheater_wav,
-       BinaryData::Ampitheater_wavSize},
-      {"Bedroom", "Bedroom_wav", BinaryData::Bedroom_wav,
-       BinaryData::Bedroom_wavSize},
-      {"Synthetic", "Synthetic_wav", BinaryData::Synthetic_wav,
-       BinaryData::Synthetic_wavSize},
-      {"Kronecker", "Kronecker_wav", BinaryData::Kronecker_wav,
-       BinaryData::Kronecker_wavSize},
+const std::array<IRInfo, 2> &SpectralConvolverAudioProcessor::getIRList()
+{
+  static const std::array<IRInfo, 2> irList = {{
+      {"Hall", "Hall_wav", BinaryData::Hall_wav, BinaryData::Hall_wavSize},
+      {"Room", "Room_wav", BinaryData::Room_wav, BinaryData::Room_wavSize},
   }};
   return irList;
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout
+SpectralConvolverAudioProcessor::createParameterLayout()
+{
+  juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+  layout.add(std::make_unique<juce::AudioParameterFloat>(
+      juce::ParameterID{"dryWet", 1}, "Dry/Wet",
+      juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f));
+
+  layout.add(std::make_unique<juce::AudioParameterChoice>(
+      juce::ParameterID{"algorithm", 1}, "Algorithm",
+      juce::StringArray{"Frequency Domain", "Time Domain"}, 0));
+
+  layout.add(std::make_unique<juce::AudioParameterChoice>(
+      juce::ParameterID{"irIndex", 1}, "Impulse Response",
+      juce::StringArray{"Hall", "Room"}, 0));
+
+  return layout;
 }
 
 SpectralConvolverAudioProcessor::SpectralConvolverAudioProcessor()
@@ -29,16 +44,22 @@ SpectralConvolverAudioProcessor::SpectralConvolverAudioProcessor()
       )
 #endif
 {
+  dryWetParam = apvts.getRawParameterValue("dryWet");
+  algorithmParam = apvts.getRawParameterValue("algorithm");
+  irIndexParam = apvts.getRawParameterValue("irIndex");
+
   loadImpulseResponseByIndex(0);
 }
 
 SpectralConvolverAudioProcessor::~SpectralConvolverAudioProcessor() {}
 
-const juce::String SpectralConvolverAudioProcessor::getName() const {
+const juce::String SpectralConvolverAudioProcessor::getName() const
+{
   return JucePlugin_Name;
 }
 
-bool SpectralConvolverAudioProcessor::acceptsMidi() const {
+bool SpectralConvolverAudioProcessor::acceptsMidi() const
+{
 #if JucePlugin_WantsMidiInput
   return true;
 #else
@@ -46,7 +67,8 @@ bool SpectralConvolverAudioProcessor::acceptsMidi() const {
 #endif
 }
 
-bool SpectralConvolverAudioProcessor::producesMidi() const {
+bool SpectralConvolverAudioProcessor::producesMidi() const
+{
 #if JucePlugin_ProducesMidiOutput
   return true;
 #else
@@ -54,7 +76,8 @@ bool SpectralConvolverAudioProcessor::producesMidi() const {
 #endif
 }
 
-bool SpectralConvolverAudioProcessor::isMidiEffect() const {
+bool SpectralConvolverAudioProcessor::isMidiEffect() const
+{
 #if JucePlugin_IsMidiEffect
   return true;
 #else
@@ -62,7 +85,8 @@ bool SpectralConvolverAudioProcessor::isMidiEffect() const {
 #endif
 }
 
-double SpectralConvolverAudioProcessor::getTailLengthSeconds() const {
+double SpectralConvolverAudioProcessor::getTailLengthSeconds() const
+{
   if (irLoaded.load() && currentSampleRate > 0.0)
     return static_cast<double>(irLength) / currentSampleRate;
   return 0.0;
@@ -70,22 +94,25 @@ double SpectralConvolverAudioProcessor::getTailLengthSeconds() const {
 
 int SpectralConvolverAudioProcessor::getNumPrograms() { return 1; }
 int SpectralConvolverAudioProcessor::getCurrentProgram() { return 0; }
-void SpectralConvolverAudioProcessor::setCurrentProgram(int index) {
+void SpectralConvolverAudioProcessor::setCurrentProgram(int index)
+{
   juce::ignoreUnused(index);
 }
-const juce::String SpectralConvolverAudioProcessor::getProgramName(int index) {
+const juce::String SpectralConvolverAudioProcessor::getProgramName(int index)
+{
   juce::ignoreUnused(index);
   return {};
 }
 
 void SpectralConvolverAudioProcessor::changeProgramName(
-    int index, const juce::String &newName) {
+    int index, const juce::String &newName)
+{
   juce::ignoreUnused(index, newName);
 }
 
 //==============================================================================
-int SpectralConvolverAudioProcessor::calculateFFTOrder(int irLen,
-                                                       int blockSize) {
+int SpectralConvolverAudioProcessor::calculateFFTOrder(int irLen, int blockSize)
+{
   const int minFFTSize = blockSize + irLen - 1;
   int order = 1;
   while ((1 << order) < minFFTSize)
@@ -95,7 +122,8 @@ int SpectralConvolverAudioProcessor::calculateFFTOrder(int irLen,
   return order;
 }
 
-void SpectralConvolverAudioProcessor::rebuildConvolvers() {
+void SpectralConvolverAudioProcessor::rebuildConvolvers()
+{
   const juce::SpinLock::ScopedLockType lock(irLock);
 
   freqConvolvers.clear();
@@ -109,7 +137,8 @@ void SpectralConvolverAudioProcessor::rebuildConvolvers() {
   const int numChannels =
       std::max(getTotalNumInputChannels(), getTotalNumOutputChannels());
 
-  for (int ch = 0; ch < numChannels; ++ch) {
+  for (int ch = 0; ch < numChannels; ++ch)
+  {
     // Create frequency domain convolver
     freqConvolvers.push_back(std::make_unique<FreqDomainConvolver>(
         currentIR, fftOrder, currentBlockSize));
@@ -127,13 +156,17 @@ void SpectralConvolverAudioProcessor::rebuildConvolvers() {
 }
 
 void SpectralConvolverAudioProcessor::prepareToPlay(double sampleRate,
-                                                    int samplesPerBlock) {
+                                                    int samplesPerBlock)
+{
   currentSampleRate = sampleRate;
   currentBlockSize = samplesPerBlock;
+  wetBuffer.resize((size_t)samplesPerBlock);
+  dryBuffer.resize((size_t)samplesPerBlock);
   rebuildConvolvers();
 }
 
-void SpectralConvolverAudioProcessor::releaseResources() {
+void SpectralConvolverAudioProcessor::releaseResources()
+{
   const juce::SpinLock::ScopedLockType lock(irLock);
 
   for (auto &conv : freqConvolvers)
@@ -147,7 +180,8 @@ void SpectralConvolverAudioProcessor::releaseResources() {
 
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool SpectralConvolverAudioProcessor::isBusesLayoutSupported(
-    const BusesLayout &layouts) const {
+    const BusesLayout &layouts) const
+{
 #if JucePlugin_IsMidiEffect
   juce::ignoreUnused(layouts);
   return true;
@@ -166,7 +200,8 @@ bool SpectralConvolverAudioProcessor::isBusesLayoutSupported(
 }
 #endif
 
-void SpectralConvolverAudioProcessor::setConvolverType(ConvolverType type) {
+void SpectralConvolverAudioProcessor::setConvolverType(ConvolverType type)
+{
   currentConvolverType.store(type);
   DBG("Convolver type set to: " << (type == ConvolverType::FrequencyDomain
                                         ? "Frequency Domain"
@@ -174,9 +209,11 @@ void SpectralConvolverAudioProcessor::setConvolverType(ConvolverType type) {
 }
 
 void SpectralConvolverAudioProcessor::processBlock(
-    juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages) {
+    juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages)
+{
   static bool firstCall = true;
-  if (firstCall) {
+  if (firstCall)
+  {
     firstCall = false;
     DBG("========== PROCESSBLOCK FIRST CALL ==========");
     DBG("freqConvolvers.size(): " + juce::String(freqConvolvers.size()));
@@ -197,6 +234,17 @@ void SpectralConvolverAudioProcessor::processBlock(
   for (auto i = totalNumInputChannels; i < totalNumOutputChannels; i++)
     buffer.clear(i, 0, numSamples);
 
+  // Read APVTS parameters
+  const float dryWetMix = dryWetParam->load();
+  const auto convolverType = static_cast<int>(algorithmParam->load()) == 0
+                                 ? ConvolverType::FrequencyDomain
+                                 : ConvolverType::TimeDomain;
+  currentConvolverType.store(convolverType);
+
+  const int newIRIndex = static_cast<int>(irIndexParam->load());
+  if (newIRIndex != currentIRIndex.load())
+    loadImpulseResponseByIndex(newIRIndex);
+
   if (irPendingRebuild.load())
     rebuildConvolvers();
 
@@ -208,9 +256,8 @@ void SpectralConvolverAudioProcessor::processBlock(
   if (!lock.isLocked())
     return;
 
-  const auto convolverType = currentConvolverType.load();
-
-  for (int channel = 0; channel < totalNumInputChannels; channel++) {
+  for (int channel = 0; channel < totalNumInputChannels; channel++)
+  {
     // Check convolver availability based on type
     if (convolverType == ConvolverType::FrequencyDomain)
       if (channel >= static_cast<int>(freqConvolvers.size()) ||
@@ -222,56 +269,53 @@ void SpectralConvolverAudioProcessor::processBlock(
 
     auto *channelData = buffer.getWritePointer(channel);
 
-    std::vector<float> drySignal;
+    // Save dry signal into pre-allocated buffer if mixing needed
     if (dryWetMix < 1.0f)
-      drySignal.assign(channelData, channelData + numSamples);
+      std::copy(channelData, channelData + numSamples, dryBuffer.data());
 
-    // Process through the selected convolver
-    std::vector<float> wetSignal;
-
+    // Process through the selected convolver into pre-allocated wet buffer
     if (convolverType == ConvolverType::FrequencyDomain)
-      wetSignal =
-          freqConvolvers[channel]->processBlock(channelData, numSamples);
+      freqConvolvers[channel]->processBlock(channelData, wetBuffer.data(),
+                                            numSamples);
     else
-      wetSignal =
-          timeConvolvers[channel]->processBlock(channelData, numSamples);
+      timeConvolvers[channel]->processBlock(channelData, wetBuffer.data(),
+                                            (size_t)numSamples);
 
     static int debugCounter = 0;
-    if (++debugCounter % 200 == 0) {
+    if (++debugCounter % 200 == 0)
+    {
       float wetPeak = 0.0f;
-      for (size_t i = 0; i < wetSignal.size(); ++i)
-        wetPeak = std::max(wetPeak, std::abs(wetSignal[i]));
+      for (int i = 0; i < numSamples; ++i)
+        wetPeak = std::max(wetPeak, std::abs(wetBuffer[(size_t)i]));
 
       DBG("Convolver: " << (convolverType == ConvolverType::FrequencyDomain
                                 ? "Freq"
                                 : "Time")
-                        << ", wetSignal size: " + juce::String(wetSignal.size())
+                        << ", wetSignal size: " + juce::String(numSamples)
                         << ", peak: " + juce::String(wetPeak));
     }
 
-    const int outputSize =
-        std::min(static_cast<int>(wetSignal.size()), numSamples);
-
-    if (dryWetMix >= 1.0f) {
-      for (int i = 0; i < outputSize; ++i)
-        channelData[i] = wetSignal[i] * wetGain;
-    } else if (dryWetMix <= 0.0f)
+    if (dryWetMix >= 1.0f)
+    {
+      for (int i = 0; i < numSamples; ++i)
+        channelData[i] = wetBuffer[(size_t)i] * wetGain;
+    }
+    else if (dryWetMix <= 0.0f)
       ;  // 100% dry - leave buffer unchanged
     else // Mix dry and wet
     {
       const float wet = dryWetMix;
       const float dry = 1.0f - dryWetMix;
-      for (int i = 0; i < outputSize; ++i)
-        channelData[i] = dry * drySignal[i] + (wet * wetSignal[i] * wetGain);
+      for (int i = 0; i < numSamples; ++i)
+        channelData[i] =
+            dry * dryBuffer[(size_t)i] + (wet * wetBuffer[(size_t)i] * wetGain);
     }
-
-    for (int i = outputSize; i < numSamples; ++i)
-      channelData[i] = 0.0f;
   }
 }
 
 void SpectralConvolverAudioProcessor::loadImpulseResponse(
-    const std::vector<float> &ir) {
+    const std::vector<float> &ir)
+{
   if (ir.empty())
     return;
 
@@ -283,7 +327,8 @@ void SpectralConvolverAudioProcessor::loadImpulseResponse(
   DBG("IR loaded: " << irLength << " samples");
 }
 
-void SpectralConvolverAudioProcessor::loadImpulseResponseByIndex(int index) {
+void SpectralConvolverAudioProcessor::loadImpulseResponseByIndex(int index)
+{
   const auto &irList = getIRList();
   if (index < 0 || index >= static_cast<int>(irList.size()))
     return;
@@ -297,7 +342,8 @@ void SpectralConvolverAudioProcessor::loadImpulseResponseByIndex(int index) {
 
   std::unique_ptr<juce::AudioFormatReader> reader(
       formatManager.createReaderFor(std::move(memStream)));
-  if (!reader) {
+  if (!reader)
+  {
     DBG("Failed to create reader for IR: " + juce::String(info.displayName));
     return;
   }
@@ -320,33 +366,28 @@ void SpectralConvolverAudioProcessor::loadImpulseResponseByIndex(int index) {
 
 bool SpectralConvolverAudioProcessor::hasEditor() const { return true; }
 
-juce::AudioProcessorEditor *SpectralConvolverAudioProcessor::createEditor() {
+juce::AudioProcessorEditor *SpectralConvolverAudioProcessor::createEditor()
+{
   return new SpectralConvolverAudioProcessorEditor(*this);
 }
 
 void SpectralConvolverAudioProcessor::getStateInformation(
-    juce::MemoryBlock &destData) {
-  juce::MemoryOutputStream stream(destData, true);
-  stream.writeFloat(dryWetMix);
-  stream.writeInt(static_cast<int>(currentConvolverType.load()));
-  stream.writeInt(currentIRIndex.load());
+    juce::MemoryBlock &destData)
+{
+  auto state = apvts.copyState();
+  std::unique_ptr<juce::XmlElement> xml(state.createXml());
+  copyXmlToBinary(*xml, destData);
 }
 
 void SpectralConvolverAudioProcessor::setStateInformation(const void *data,
-                                                          int sizeInBytes) {
-  juce::MemoryInputStream stream(data, static_cast<size_t>(sizeInBytes), false);
-  if (sizeInBytes >= static_cast<int>(sizeof(float)))
-    dryWetMix = stream.readFloat();
-
-  if (sizeInBytes >= static_cast<int>(sizeof(float) + sizeof(int)))
-    currentConvolverType.store(static_cast<ConvolverType>(stream.readInt()));
-
-  if (sizeInBytes >= static_cast<int>(sizeof(float) + 2 * sizeof(int))) {
-    int irIndex = stream.readInt();
-    loadImpulseResponseByIndex(irIndex);
-  }
+                                                          int sizeInBytes)
+{
+  std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
+  if (xml != nullptr && xml->hasTagName(apvts.state.getType()))
+    apvts.replaceState(juce::ValueTree::fromXml(*xml));
 }
 
-juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() {
+juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
+{
   return new SpectralConvolverAudioProcessor();
 }

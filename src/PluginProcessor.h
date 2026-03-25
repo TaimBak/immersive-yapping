@@ -7,19 +7,30 @@
 #include <memory>
 #include <vector>
 
-struct IRInfo {
+struct IRInfo
+{
   const char *displayName;
   const char *binaryDataName;
   const void *data;
   int size;
 };
 
-enum class ConvolverType { FrequencyDomain, TimeDomain };
+enum class ConvolverType
+{
+  FrequencyDomain,
+  TimeDomain
+};
 
-class SpectralConvolverAudioProcessor : public juce::AudioProcessor {
+class SpectralConvolverAudioProcessor : public juce::AudioProcessor
+{
 public:
   SpectralConvolverAudioProcessor();
   ~SpectralConvolverAudioProcessor() override;
+
+  static juce::AudioProcessorValueTreeState::ParameterLayout
+  createParameterLayout();
+  juce::AudioProcessorValueTreeState apvts{*this, nullptr, "Parameters",
+                                           createParameterLayout()};
 
   void prepareToPlay(double sampleRate, int samplesPerBlock) override;
   void releaseResources() override;
@@ -51,7 +62,7 @@ public:
   void setStateInformation(const void *data, int sizeInBytes) override;
 
   // IR Management
-  static const std::array<IRInfo, 4> &getIRList();
+  static const std::array<IRInfo, 2> &getIRList();
   void loadImpulseResponse(const std::vector<float> &ir);
   void loadImpulseResponseByIndex(int index);
   int getCurrentIRIndex() const { return currentIRIndex.load(); }
@@ -81,10 +92,16 @@ private:
   int currentBlockSize = 512;
   int fftOrder = 10;
 
+  // Pre-allocated audio thread buffers (sized in prepareToPlay)
+  std::vector<float> wetBuffer;
+  std::vector<float> dryBuffer;
+
   juce::SpinLock irLock;
   std::atomic<bool> irPendingRebuild{false};
 
-  float dryWetMix = 1.0f; // 1.0 = 100% wet
+  std::atomic<float> *dryWetParam = nullptr;
+  std::atomic<float> *algorithmParam = nullptr;
+  std::atomic<float> *irIndexParam = nullptr;
 
   //==============================================================================
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpectralConvolverAudioProcessor)

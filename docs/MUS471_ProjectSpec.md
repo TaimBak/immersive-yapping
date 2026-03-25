@@ -3,7 +3,7 @@ MUS-471-SP26
 
 Project Timeline and Deliverables
 
-## Part 1: Implementation Changes, Additions, and Deletions
+## Implementation Changes, Additions, and Deletions
 
 ### Summary of Work Completed in MUS 470
 
@@ -23,6 +23,8 @@ The core algorithmic and audio engine work outlined in the original MUS 470 spec
 
 **Additional Impulse Responses.** The current set of two embedded IRs (amphitheater, bedroom) will be expanded with additional recordings captured from distinct acoustic spaces to make the Unreal demo more compelling. These may be sourced from freely available IR libraries or recorded using sound lab equipment. The goal is to have at least 4-5 distinct IRs representing varied environments (e.g., hallway, bathroom, cathedral, outdoor space).
 
+**Proximity Chat Simulation.** To demonstrate the plugin's core use case — applying environment-specific reverb to VOIP proximity chat — pre-recorded voice audio will be used to simulate a nearby player speaking in-game. A set of voice audio files (sourced from an existing Wwise project containing sequenced random containers of dialogue) will be exported as WAV files and imported into Unreal as USoundWave assets. An NPC "talker" actor will be placed in the level with a spatialized UAudioComponent that plays back the voice clips through a USoundCue. The SoundCue graph will use a Random node feeding into a Concatenator node to replicate the randomized sequential playback behavior of the original Wwise random containers. The audio component's output will be routed through the convolution reverb submix, and a USoundAttenuation asset will provide distance-based falloff so the voice grows louder as the player approaches and fades as they walk away. This approach is functionally equivalent to processing a live microphone stream — the DSP pipeline is indifferent to whether the audio source is a real-time VOIP input or a pre-recorded file — while avoiding the significant additional work of building a native Wwise/Audiokinetic plugin.
+
 **GUI Improvements.** The plugin editor will be expanded to include a dry/wet mix slider, backed by APVTS for proper DAW automation support. The current toggle button and combo box will remain for algorithm selection and IR selection. The layout will be cleaned up for a more polished presentation during the final demo.
 
 ### Goals Moved to Stretch / Deprioritized
@@ -37,59 +39,52 @@ The core algorithmic and audio engine work outlined in the original MUS 470 spec
 
 **Multichannel and ambisonics support — removed.** These were mentioned as future extensions in the original spec and are not being pursued. They would require substantial additional DSP work (multichannel IR handling, spatial encoding/decoding) that falls outside the core scope of the project. The plugin operates in stereo, which is appropriate for the VOIP/proximity chat use case described in the original motivation.
 
-## Part 2: Timeline of Milestones and Deliverables
+## Timeline of Milestones and Deliverables
 
-### Week 1 — March 3 to March 7: Plugin Parameter System and Unreal Research
+### Week 1: Plugin Parameter System, Unreal Research, and Project Setup
 
 - Implement APVTS in the JUCE plugin to expose dry/wet mix as an automatable parameter with a GUI slider.
 - Wire algorithm selection and IR selection through APVTS for consistent parameter management.
 - Test updated plugin in Reaper to verify parameter automation and state recall.
 - Begin research on Unreal Engine's Submix Effect plugin API: study FSoundEffectSubmix, USoundEffectSubmixPreset, and Unreal's existing FSubmixEffectConvolutionReverb source code for reference.
 - Evaluate FFT library options for the Unreal build (KissFFT vs. linking JUCE DSP module vs. pffft).
-- Milestone: Dry/wet mix slider functional and automatable in Reaper.
-
-### Week 2 — March 10 to March 14: Unreal Engine Project Setup and Submix Effect Scaffolding
-
 - Create an Unreal Engine 5 project using a basic first-person template.
 - Set up a C++ plugin module within the Unreal project for the convolution reverb Submix Effect.
 - Implement the bare Submix Effect boilerplate (FSoundEffectSubmix subclass) that passes audio through unmodified.
-- Milestone: Audio passes through the custom Submix Effect in the Unreal editor without artifacts.
+- Milestone: Dry/wet mix slider functional and automatable in Reaper. Audio passes through the custom Submix Effect in the Unreal editor without artifacts.
 
-### Week 3 — March 17 to March 21: DSP Porting and Convolution in Unreal
+### Week 2: DSP Porting, Convolution in Unreal, and Level Design
 
 - Port the FreqDomainConvolver class into the Unreal plugin module, resolving FFT library dependencies.
 - Integrate the frequency-domain convolver into the Submix Effect's ProcessAudio callback with a single hardcoded IR.
 - Handle sample rate and block size differences between the JUCE plugin configuration and Unreal's audio device settings.
 - Test real-time convolution on in-game audio sources (footsteps, ambient sounds, or voice).
-- Milestone: Convolution reverb is audible and functioning on audio within the Unreal Engine editor.
-
-### Week 4 — March 24 to March 28: Multi-Room Level Design and IR Sourcing
-
 - Build out the Unreal level with 3-4 distinct rooms/zones of varying size and acoustic character.
 - Source or record additional impulse responses (target: 4-5 total) representing varied environments (e.g., hallway, bathroom, cathedral, outdoor space).
 - Embed the new IRs in the Unreal plugin module.
-- Milestone: Level geometry and IR library are ready for integration.
+- Milestone: Convolution reverb is audible and functioning on audio within the Unreal Engine editor. Level geometry and IR library are ready for integration.
 
-### Week 5 — March 31 to April 4: IR Switching and Audio Volume Integration
+### Week 3: IR Switching, Audio Volumes, and Prox Chat Setup
 
 - Place Audio Volume actors to define reverb zones corresponding to each room.
 - Implement IR switching logic: when the player enters a new Audio Volume, the active IR changes to match the environment.
 - Handle edge cases in IR switching (crossfading between IRs to avoid clicks/pops at zone boundaries).
-- Milestone: Walking between rooms in the Unreal level produces distinct, environment-appropriate reverb.
+- Export voice audio files from the Wwise project as WAV and import into Unreal as USoundWave assets.
+- Build a USoundCue graph (Random → Concatenator) to replicate the Wwise random container sequencing behavior.
+- Create an NPC "talker" actor with a spatialized UAudioComponent playing the SoundCue, routed through the convolution reverb submix.
+- Configure a USoundAttenuation asset for distance-based falloff to simulate proximity chat range.
+- Milestone: Walking between rooms produces distinct, environment-appropriate reverb. Proximity chat simulation actor is functional and routed through the reverb submix.
 
-### Week 6 — April 7 to April 11: Testing and GUI Polish
+### Week 4: Integration Testing, GUI Polish, and Demo Preparation
 
+- Place the NPC talker actor in the level and verify that the simulated voice audio is spatialized, attenuated by distance, and processed through the convolution reverb with the correct room IR.
+- Test the full walkthrough scenario: approaching the NPC to hear proximity chat, then walking between rooms to hear the reverb character change on the voice audio.
 - Conduct thorough testing of both the standalone JUCE plugin (in Reaper) and the Unreal integration.
 - Polish the JUCE plugin GUI layout and ensure it presents well for demonstration.
 - Fix any remaining bugs, audio artifacts, or performance issues discovered during testing.
-- Milestone: Both the JUCE plugin and Unreal demo are stable and free of major issues.
-
-### Week 7 — April 14 to April 18: Final Demo Preparation and Documentation
-
-- Record a demo video or prepare a live demo walkthrough for finals week.
+- Record a demo video or prepare a live demo walkthrough.
 - Finalize project documentation and portfolio writeup.
-- Buffer time for any tasks that slipped from previous weeks.
-- Milestone: Project is demo-ready for finals week presentation. Final version submitted to Moodle by April 20.
+- Milestone: Both the JUCE plugin and Unreal demo are stable, demo-ready, and free of major issues. Walking between rooms in the Unreal level produces distinct, environment-appropriate reverb on both ambient audio and the simulated proximity chat voice.
 
 ## Overview
 
@@ -132,14 +127,16 @@ The major new audio engine work is porting the convolver into Unreal Engine as a
 - Resolving the FFT dependency for the Unreal build environment, either by integrating a standalone FFT library or linking the JUCE DSP module.
 - Implementing IR switching driven by gameplay events (player entering Audio Volume zones), which requires coordination between the game thread (collision/overlap detection) and the audio thread (swapping the active IR spectrum). The existing try-lock pattern from the JUCE plugin will be adapted for this purpose.
 
-The final deliverable will demonstrate two audio engine integrations: the original JUCE plugin running in a DAW (Reaper), and the Unreal Engine Submix Effect processing in-game audio with per-room impulse response switching.
+The Unreal demo will include a proximity chat simulation to demonstrate the plugin's motivating use case. Pre-recorded voice dialogue (exported from an existing Wwise project) will be played back through a spatialized, distance-attenuated audio component on an NPC actor, routed through the convolution reverb submix. This is functionally equivalent to processing a live VOIP stream — the convolver operates identically regardless of whether the input is a real-time microphone signal or a pre-recorded file — while avoiding the substantial additional effort of building a native Wwise/Audiokinetic plugin integration.
+
+The final deliverable will demonstrate two audio engine integrations: the original JUCE plugin running in a DAW (Reaper), and the Unreal Engine Submix Effect processing in-game audio — including simulated proximity chat voice — with per-room impulse response switching.
 
 References:
 
-Verlag, L., & Gmbh, B. (n.d.). Partitioned convolution algorithms for real-time auralization. https://publications.rwth-aachen.de/record/466561/files/466561.pdf
+Verlag, L., & Gmbh, B. (n.d.). Partitioned convolution algorithms for real-time auralization. <https://publications.rwth-aachen.de/record/466561/files/466561.pdf>
 
 Steiglitz, K. (2020). A digital signal processing primer: with applications to digital audio and computer music. Dover Publications, Inc.
 
 Matthijs Hollemans. (2024). The Complete Beginner's Guide to Audio Plug-in Development.
 
-Epic Games. Unreal Engine 5 Documentation: Audio System, Submix Effects, Audio Volumes. https://dev.epicgames.com/documentation/en-us/unreal-engine/
+Epic Games. Unreal Engine 5 Documentation: Audio System, Submix Effects, Audio Volumes. <https://dev.epicgames.com/documentation/en-us/unreal-engine/>

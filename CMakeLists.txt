@@ -6,7 +6,7 @@ add_subdirectory(JUCE)
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
 
 juce_add_plugin(SpectralConvolver
-    PRODUCT_NAME "SpectralConvolver"
+    PRODUCT_NAME "ImmersiveYapping"
     COMPANY_NAME "TaimBak"
     BUNDLE_ID "com.TaimBak.SpectralConvolver"
     PLUGIN_MANUFACTURER_CODE Manu
@@ -19,17 +19,15 @@ juce_add_plugin(SpectralConvolver
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     VST3_CATEGORIES Fx
     AU_MAIN_TYPE kAudioUnitType_Effect
-    COPY_PLUGIN_AFTER_BUILD FALSE
+    COPY_PLUGIN_AFTER_BUILD TRUE
 )
 
 juce_generate_juce_header(SpectralConvolver)
 
 juce_add_binary_data(IRData
     SOURCES
-        assets/Ampitheater.wav
-        assets/Bedroom.wav
-        assets/Synthetic.wav
-        assets/Kronecker.wav
+        assets/Hall.wav
+        assets/Room.wav
 )
 
 target_sources(SpectralConvolver
