@@ -32,7 +32,7 @@ The convolution DSP is also being ported into Unreal Engine 5 as a native **Subm
 
 ## Algorithm
 
-The frequency-domain convolver implements Frank Wefers's Overlap-Add scheme for partitioned convolution. Input blocks (B=512) are zero-padded to FFT size K=1024, transformed, multiplied with the pre-computed IR spectrum, and inverse-transformed. Overlap tails are accumulated across blocks for seamless reconstruction. The constraint K >= B + N - 1 prevents time-domain aliasing.
+The frequency-domain convolver implements Overlap-Add scheme found in Frank Wefers's paper on partitioned convolution. Input blocks (B=512) are zero-padded to FFT size K=1024, transformed, multiplied with the pre-computed IR spectrum, and inverse-transformed. Overlap tails are accumulated across blocks for seamless reconstruction. The constraint K >= B + N - 1 prevents time-domain aliasing.
 
 ## References
 
