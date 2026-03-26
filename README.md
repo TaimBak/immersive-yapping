@@ -1,6 +1,10 @@
 # Immersive Yapping - A Spectral Convolution Plugin for Proximity Chat
 
-A real-time convolution reverb system built in C++ with JUCE, targeting both DAW and game engine environments. The plugin applies environment-specific impulse response (IR) reverb to audio — designed for use cases like VOIP proximity chat in 3D games where traditional baked-in reverb falls short.
+<img align="right" width="15%" src="https://austinclark.dev/images/fouriergaming_cropped.webp">
+
+A real-time convolution reverb system built in C++ with JUCE, targeting both DAW and game engine environments. Inspired by reverb effects applied to player voices in games such as [PEAK](https://store.steampowered.com/app/3527290/PEAK/) and [ARC Raiders](https://store.steampowered.com/app/1808500/ARC_Raiders/). The plugin applies environment-specific impulse response (IR) reverb to audio and is designed for use cases like VOIP proximity chat in 3D games where traditional baked-in reverb falls short.
+
+<br clear="both">
 
 ## Features
 
@@ -24,7 +28,7 @@ cmake --build build
 
 ## Unreal Engine Integration
 
-The convolution DSP is also being ported into Unreal Engine 5 as a native **Submix Effect** plugin. In the Unreal demo, different impulse responses are triggered based on the player's location using Audio Volume actors — walking between rooms produces distinct, environment-appropriate reverb.
+The convolution DSP is also being ported into Unreal Engine 5 as a native **Submix Effect** plugin. In the Unreal demo, different impulse responses are triggered based on the player's location using Audio Volume actors — walking between rooms produces distinct, environment-appropriate reverb. Source files for the module can be found at in the git submodule "immersive-yapping-submix-effect".
 
 ## Algorithm
 
