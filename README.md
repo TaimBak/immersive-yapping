@@ -28,7 +28,7 @@ cmake --build build
 
 ## Unreal Engine Integration
 
-The convolution DSP is also being ported into Unreal Engine 5 as a native **Submix Effect** plugin. In the Unreal demo, different impulse responses are triggered based on the player's location using Audio Volume actors — walking between rooms produces distinct, environment-appropriate reverb. Source files for the module can be found at in the git submodule "immersive-yapping-submix-effect".
+The convolution DSP is also being ported into Unreal Engine 5 as a native **Submix Effect** plugin. In the Unreal demo, different impulse responses are triggered based on the player's location using Audio Volume actors — walking between rooms produces distinct, environment-appropriate reverb. Source files for the module can be found at in the git submodule [immersive-yapping-submix-effect](https://github.com/TaimBak/immersive-yapping-submix-effect.git). This dependancy is not required to build the JUCE plugin.
 
 ## Algorithm
 
