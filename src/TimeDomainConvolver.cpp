@@ -20,7 +20,6 @@ float TimeDomainConvolver::processSample(float x)
   delayBuffer[writeIndex] = x;
 
   // y[n] = sum_{k=0}^{irSize-1} ir[k] * inputBuffer[tempIndex]
-  // Walk the IR forward and the delay line backward
   float sum = 0.0f;
   std::size_t tempIndex = writeIndex;
   for (std::size_t k = 0; k < irSize; k++)

@@ -5,7 +5,7 @@
 const std::array<IRInfo, 3> &SpectralConvolverAudioProcessor::getIRList()
 {
   static const std::array<IRInfo, 3> irList = {
-      {{"Hall", "Hall_wav", BinaryData::Basement_wav,
+      {{"Basement", "Basement_wav", BinaryData::Basement_wav,
         BinaryData::Basement_wavSize},
        {"Office", "Office_wav", BinaryData::Office_wav,
         BinaryData::Office_wavSize},
